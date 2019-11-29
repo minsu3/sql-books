@@ -1,6 +1,6 @@
 // Require statements
 let express = require('express');
-let database = require('./database.js')
+let database = require('./database.js');
 let app = express();
 
 // Middleware
@@ -13,8 +13,6 @@ const port = 3000;
 app.get('/', (request, response) => {
   response.send('Visit /api/books to see our list of titles');
 });
-
-
 
 ////////////////////
 //  BOOK ROUTES  
@@ -54,19 +52,19 @@ app.get('/api/books/:id',  (request, response) => {
 });
 
 // create new book
-app.post('/api/books',  (request, response) => {
+app.post('/api/books', (request, response) => {
   // create new book with form data (`req.body`)
-  const reqBody = [request.body.title, request.body.author_id, request.body.image, request.body.release_date, request.body.page_count]
-  const createNewBook = 'INSERT INTO books VALUES = (?, ?, ?, ?, ?)';
+  const reqBody = [request.body.title, request.body.author_id, request.body.image, request.body.release_date, request.body.page_count];
+  const createNewBook = 'INSERT INTO books VALUES (?, ?, ?, ?, ?)';
 
-  database.run(createNewBook, [request.body.title], error => {
+  database.run(createNewBook, reqBody, error => {
     if(error) {
       console.log(`Create new book with title: ${request.body.title} failed`);
       response.sendStatus(500);
     }
     else {
-      console.log(`Added new book ${request.body.title}`);
-      response.status(200).json(results);
+      console.log(`Successfully added new book ${request.body.title}`);
+      response.sendStatus(200);
     }
   });
 });
@@ -108,8 +106,6 @@ app.delete('/api/books/:id', (request, response) => {
   });
 });
 
-
-
 ////////////////////////
 // TODO: AUTHOR ROUTES
 ////////////////////////
@@ -132,7 +128,7 @@ app.get('/api/authors', (request,response) => {
 
 // 2. Write a route to add a new author to the database
 app.post('/api/authors', (request, response) => {
-  reqBody = [request.body.name];
+  const reqBody = [request.body.name];
   const addNewAuthor = 'INSERT INTO authors VALUES (?)';
 
   database.all(addNewAuthor, reqBody, error => {
@@ -146,9 +142,58 @@ app.post('/api/authors', (request, response) => {
     }
   });
 });
+
 // 3. (OPTIONAL) Write the rest of the RESTful routes for this entity for extra practice.
 
+//get one author
+app.get('/api/authors/:id', (request, response) => {
+  const authorId = request.params.body;
+  const retrieveOneAuthor = 'SELECT * FROM authors WHERE authors.oid = ?';
 
+  database.all(retrieveOneAuthor, [authorId], (error, results) => {
+    if(error) {
+      console.log('Failed to retrieve one author from the table');
+      response.sendStatut(500);
+    } else {
+      console.log('Succeeded retrieving one author from the table');
+      response.status(200).json(results);
+    }
+  });
+});
+
+//Update author
+app.put('/api/authors/:id', (request, response) => {
+  const authorId = request.params.id;
+  const updateOneAuthor = `UPDATE authors SET NAME = ? WHERE authors.oid = ${authorId}`;
+
+  database.all(updateOneAuthor, [request.body.name], error => {
+    if(error) {
+      console.log(`Update author with name ${authorId} failed`, error);
+      response.sendStatus(500);
+    } else {
+      console.log(`Update author with name ${authorId} succeeded`);
+      response.sendStatus(200);
+    }
+  });
+});
+
+// Delete author
+app.delete('/api/authors/:id', (request, response) => {
+  // get book id from url params (`req.params`)
+  const authorId = [request.params.id];
+  const deleteAuthors = `DELETE FROM authors WHERE ? = oid`;
+
+  database.run(deleteAuthors, authorId, error => {
+    if(error) {
+      console.log(`Delete from authors with ID of ${authorId} failed`);
+      response.sendStatus(500);
+    }
+    else{
+      console.log(`Delete from authors with ID of ${authorId} succeeded`);
+      response.sendStatus(200);
+    }
+  });
+});
 
 //////////////////////////
 // TODO: CATEGORY ROUTES
@@ -168,6 +213,7 @@ app.get('/api/categories', (request, response) => {
     }
   });
 });
+
 // 2. Write a route to add a new category to the database
 app.post('/api/categories', (request, response) => {
   reqBody = [request.body.name];
@@ -186,7 +232,53 @@ app.post('/api/categories', (request, response) => {
 })
 // 3. (OPTIONAL) Write the rest of the RESTful routes for this entity for extra practice.
 
+//get one category 
+app.get('/api/categories', (request, response) => {
+  const categoryId = [request.params.id];
+  const getOneCategory = 'SELECT * FROM categories WHERE categories.oid = ?'
 
+  database.all(getOneCategory, [categoryId], (error, results) => {
+    if (error) {
+      console.log(`Select one category with ID of ${categoryId} failed`, error);
+      response.sendStatus(500);
+    } else {
+      console.log(`Select one category with ID of ${categoryId} succeeded`);
+      response.send(200).json(results);
+    }
+  });
+});
+
+//update category 
+app.put('/api/categories/:id', (request, response) => {
+  const categoryId = [request.params.id];
+  const updateOneCategory = `UPDATE categories SET NAME = ? WHERE categories.oid = ${categoryId}`;
+
+  database.run(updateOneCategory, [req.body.name], error => {
+    if(error) {
+      console.log(`Update one category with ID of ${categoryId} failed`, error);
+      response.sendStatus(500);
+    } else {
+      console.log(`Update one category with ID of ${categoryId} succeeded`);
+      response.sendStatus(200);
+    }
+  });
+});
+
+//delete category 
+app.delete('/api/categories/:id', (request, response) => {
+  const categoryId = [request.params.id];
+  const deleteOneCategory = `DELETE FROM categories WHERE ? = oid`
+
+  database.run(deleteOneCategory, categoryId, error => {
+    if(error) {
+      console.log(`Deleting one category with ID ${categoryId} failed`, error);
+      response.sendStatus(500);
+    } else {
+      console.log(`Deleting one category with ID ${categoryId} succeeded`);
+      response.status(200);
+    }
+  });
+});
 
 /////////////////////////////////////////////////
 // TODO: BOOKS_CATEGORIES ROUTES (MANY TO MANY)
@@ -211,22 +303,59 @@ app.get('/api/books/:id/categories',(request, response) => {
 // Create an association between a book and a category using the book ID 
 app.post('/api/books/:id/categories', (request, response) => {
   const bookId = request.params.id;
-  const catId = request.body.category_id
+  const catId = request.body.category_id;
+  //const getBookTitle = `SELECT title FROM books WHERE books.oid = ?`;
+  //let bookTitle = "";
   const insertString = "INSERT INTO books_categories VALUES (?, ?)"
+
+  // database.all(getBookTitle, [bookId], (error, results) => {
+  //   if (error) {
+  //     console.log(`Error getting book title`);
+  //     response.sendStatus(500);
+  //   }
+  //   else {
+  //     console.log(`Creating association between book and category succeeded`);
+  //     // [ { title: 'Romeo and Juliet' } ]
+  //     bookTitle = results[0].title;
+  //     console.log(bookTitle);
+  //   }
+  // });
+  //database.run(insertString, [bookId, bookTitle, catId], error => {
 
   database.run(insertString, [bookId, catId], error => {
     if (error) {
-      console.log(`Error in creating association between book and category`);
+      console.log(`Error in creating association between book and category`, error);
       response.sendStatus(500);
     }
     else {
       console.log(`Creating association between book and category succeeded`);
       response.sendStatus(200);
     }
-  })
+  });
 });
 
+app.get('/api/books_categories', (req, res)=>{
+  const queryString = `SELECT * FROM books_categories`
 
+  database.all(queryString, (err, results)=>{
+    if(err){
+      console.log(`Couldn't get books_categories table.`)
+      res.sendStatus(500)
+    } else {
+      res.status(200).json(results)
+    }
+  })
+})
+
+app.delete('/api/books_categories/:id', (req,res)=>{
+  const queryInsertion = [req.params.id]
+  const queryString = 'DELETE FROM books_categories WHERE book_id = ?'
+
+  database.run(queryString, queryInsertion, err=>{
+    if(err) res.sendStatus(500)
+    else  res.sendStatus(200)
+  })
+})
 
 // Start Server
 app.listen(port, () => {
