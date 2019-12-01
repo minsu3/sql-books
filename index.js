@@ -300,6 +300,19 @@ app.get('/api/books/:id/categories',(request, response) => {
   })
 });
 
+app.get('/api/books_categories', (request, response) => {
+  const queryString = `SELECT * FROM books_categories`
+
+  database.all(queryString, (error, results)=>{
+    if(error) {
+      console.log(`Failed to select all book categories from books_categories table.`)
+      res.sendStatus(500)
+    } else {
+      response.status(200).json(results)
+    }
+  })
+})
+
 // Create an association between a book and a category using the book ID 
 app.post('/api/books/:id/categories', (request, response) => {
   const bookId = request.params.id;
@@ -334,26 +347,13 @@ app.post('/api/books/:id/categories', (request, response) => {
   });
 });
 
-app.get('/api/books_categories', (req, res)=>{
-  const queryString = `SELECT * FROM books_categories`
-
-  database.all(queryString, (err, results)=>{
-    if(err){
-      console.log(`Couldn't get books_categories table.`)
-      res.sendStatus(500)
-    } else {
-      res.status(200).json(results)
-    }
-  })
-})
-
-app.delete('/api/books_categories/:id', (req,res)=>{
-  const queryInsertion = [req.params.id]
+app.delete('/api/books_categories/:id', (request, response) => {
+  const queryInsertion = [request.params.id]
   const queryString = 'DELETE FROM books_categories WHERE book_id = ?'
 
-  database.run(queryString, queryInsertion, err=>{
-    if(err) res.sendStatus(500)
-    else  res.sendStatus(200)
+  database.run(queryString, queryInsertion, error=>{
+    if(error) response.sendStatus(500)
+    else response.sendStatus(200)
   })
 })
 
