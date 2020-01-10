@@ -300,6 +300,7 @@ app.get('/api/books/:id/categories',(request, response) => {
   })
 });
 
+//Retrieve all books categories 
 app.get('/api/books_categories', (request, response) => {
   const queryString = `SELECT * FROM books_categories`
 

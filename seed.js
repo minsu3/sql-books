@@ -233,6 +233,8 @@ db.serialize(()=> {
   	else console.log("Created 'books categories' table");
   })
 
+  
+
 })
 
 
